@@ -38,10 +38,12 @@ namespace PdfFillPdfFields
                     Console.WriteLine($"{r.GetX()} {r.GetY()} {r.GetWidth()} {r.GetHeight()}");
                 }
 
-                float x = 90.504f;
-                float y = 698.98f;
-                float width = 219.02f;
-                float height = 70.464f;
+                var firstCleaned = cleaned[0];
+
+                float x = firstCleaned.GetX();
+                float y = firstCleaned.GetY();
+                float width = firstCleaned.GetWidth();
+                float height = firstCleaned.GetHeight();
 
                 var textField = new TextFormFieldBuilder(pdfDoc, "CellText")
                     .SetPage(1)
