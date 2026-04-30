@@ -33,7 +33,7 @@ namespace PdfFillPdfFields
                 var bytes = contentStream.GetBytes();
                 var content = Encoding.GetEncoding("ISO-8859-1").GetString(bytes); // 兼容 PDF 内容编码
                 
-                originWriter.Write(content);
+                originWriter.WriteLine(content);
                 
                 var listener = new RectListener();
                 var processor = new PdfCanvasProcessor(listener);
