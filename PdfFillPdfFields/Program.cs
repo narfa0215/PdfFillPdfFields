@@ -69,6 +69,8 @@ namespace PdfFillPdfFields
                             .SetWidgetRectangle(new Rectangle(x, y, width, height))
                             .CreateText();
 
+                        textField.SetMultiline(true);
+
                         form.AddField(textField);
                     }
                 }
