@@ -27,7 +27,8 @@ namespace PdfFillPdfFields
                 var form = PdfAcroForm.GetAcroForm(pdfDoc, true);
 
                 var index = -1;
-                for (var i = 1; i <= pdfDoc.GetNumberOfPages(); i++)
+                var numberOfPages = pdfDoc.GetNumberOfPages();
+                for (var i = 1; i <= numberOfPages; i++)
                 {
                     var page = pdfDoc.GetPage(i);
                 
@@ -44,21 +45,19 @@ namespace PdfFillPdfFields
                     processor.ProcessPageContent(page);
                 
                     var cleaned = CleanRects(listener.Rectangles);
-                
-                    Console.WriteLine("=== 真实表格单元格 ===");
                     foreach (var rect in cleaned)
                     {
                         bool isEmpty = PdfCellChecker.IsEmptyCell(page, rect);
 
                         if (!isEmpty)
                         {
-                            Console.WriteLine($"有内容，跳过：{rect.GetX()} {rect.GetY()} {rect.GetWidth()} {rect.GetHeight()}");
+                            Console.WriteLine($"({index + 1:D6}:{i:D4}/{numberOfPages:D4})跳过非空单元格：{rect.GetX()} {rect.GetY()} {rect.GetWidth()} {rect.GetHeight()}");
                             continue;
                         }
 
                         index++;
                         
-                        Console.WriteLine($"空单元格：{rect.GetX()} {rect.GetY()} {rect.GetWidth()} {rect.GetHeight()}");
+                        Console.WriteLine($"({index + 1:D6}:{i:D4}/{numberOfPages:D4})处理空白单元格：{rect.GetX()} {rect.GetY()} {rect.GetWidth()} {rect.GetHeight()}");
 
                         float x = rect.GetX();
                         float y = rect.GetY();
