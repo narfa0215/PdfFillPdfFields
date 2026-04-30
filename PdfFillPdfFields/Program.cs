@@ -43,8 +43,9 @@ namespace PdfFillPdfFields
                 var cleaned = CleanRects(listener.Rectangles);
                 
                 Console.WriteLine("=== 真实表格单元格 ===");
-                foreach (var r in cleaned)
+                for (var index = 0; index < cleaned.Count; index++)
                 {
+                    var r = cleaned[index];
                     Console.WriteLine($"{r.GetX()} {r.GetY()} {r.GetWidth()} {r.GetHeight()}");
 
                     float x = r.GetX();
@@ -52,11 +53,11 @@ namespace PdfFillPdfFields
                     float width = r.GetWidth();
                     float height = r.GetHeight();
 
-                    var textField = new TextFormFieldBuilder(pdfDoc, "CellText")
+                    var textField = new TextFormFieldBuilder(pdfDoc, "00" + (index == 0 ? "" : "_" + (index + 1)))
                         .SetPage(1)
                         .SetWidgetRectangle(new Rectangle(x, y, width, height))
                         .CreateText();
-                
+
                     form.AddField(textField);
                 }
             }
