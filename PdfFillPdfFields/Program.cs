@@ -26,39 +26,44 @@ namespace PdfFillPdfFields
             {
                 var form = PdfAcroForm.GetAcroForm(pdfDoc, true);
 
-                var page = pdfDoc.GetPage(1);
-                
-                var contentStream = page.GetContentStream(0);
-
-                var bytes = contentStream.GetBytes();
-                var content = Encoding.GetEncoding("ISO-8859-1").GetString(bytes); // 兼容 PDF 内容编码
-                
-                originWriter.WriteLine(content);
-                
-                var listener = new RectListener();
-                var processor = new PdfCanvasProcessor(listener);
-                
-                processor.ProcessPageContent(page);
-                
-                var cleaned = CleanRects(listener.Rectangles);
-                
-                Console.WriteLine("=== 真实表格单元格 ===");
-                for (var index = 0; index < cleaned.Count; index++)
+                var index = -1;
+                for (var i = 1; i <= pdfDoc.GetNumberOfPages(); i++)
                 {
-                    var r = cleaned[index];
-                    Console.WriteLine($"{r.GetX()} {r.GetY()} {r.GetWidth()} {r.GetHeight()}");
+                    var page = pdfDoc.GetPage(i);
+                
+                    var contentStream = page.GetContentStream(0);
 
-                    float x = r.GetX();
-                    float y = r.GetY();
-                    float width = r.GetWidth();
-                    float height = r.GetHeight();
+                    var bytes = contentStream.GetBytes();
+                    var content = Encoding.GetEncoding("ISO-8859-1").GetString(bytes); // 兼容 PDF 内容编码
+                
+                    originWriter.WriteLine(content);
+                
+                    var listener = new RectListener();
+                    var processor = new PdfCanvasProcessor(listener);
+                
+                    processor.ProcessPageContent(page);
+                
+                    var cleaned = CleanRects(listener.Rectangles);
+                
+                    Console.WriteLine("=== 真实表格单元格 ===");
+                    foreach (var r in cleaned)
+                    {
+                        index++;
+                        
+                        Console.WriteLine($"{r.GetX()} {r.GetY()} {r.GetWidth()} {r.GetHeight()}");
 
-                    var textField = new TextFormFieldBuilder(pdfDoc, "00" + (index == 0 ? "" : "_" + (index + 1)))
-                        .SetPage(1)
-                        .SetWidgetRectangle(new Rectangle(x, y, width, height))
-                        .CreateText();
+                        float x = r.GetX();
+                        float y = r.GetY();
+                        float width = r.GetWidth();
+                        float height = r.GetHeight();
 
-                    form.AddField(textField);
+                        var textField = new TextFormFieldBuilder(pdfDoc, "00" + (index == 0 ? "" : "_" + (index + 1)))
+                            .SetPage(1)
+                            .SetWidgetRectangle(new Rectangle(x, y, width, height))
+                            .CreateText();
+
+                        form.AddField(textField);
+                    }
                 }
             }
         }
