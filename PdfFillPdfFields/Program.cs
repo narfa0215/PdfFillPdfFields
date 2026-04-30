@@ -46,16 +46,24 @@ namespace PdfFillPdfFields
                     var cleaned = CleanRects(listener.Rectangles);
                 
                     Console.WriteLine("=== 真实表格单元格 ===");
-                    foreach (var r in cleaned)
+                    foreach (var rect in cleaned)
                     {
+                        bool isEmpty = PdfCellChecker.IsEmptyCell(page, rect);
+
+                        if (!isEmpty)
+                        {
+                            Console.WriteLine($"有内容，跳过：{rect.GetX()} {rect.GetY()} {rect.GetWidth()} {rect.GetHeight()}");
+                            continue;
+                        }
+
                         index++;
                         
-                        Console.WriteLine($"{r.GetX()} {r.GetY()} {r.GetWidth()} {r.GetHeight()}");
+                        Console.WriteLine($"空单元格：{rect.GetX()} {rect.GetY()} {rect.GetWidth()} {rect.GetHeight()}");
 
-                        float x = r.GetX();
-                        float y = r.GetY();
-                        float width = r.GetWidth();
-                        float height = r.GetHeight();
+                        float x = rect.GetX();
+                        float y = rect.GetY();
+                        float width = rect.GetWidth();
+                        float height = rect.GetHeight();
 
                         var textField = new TextFormFieldBuilder(pdfDoc, "00" + (index == 0 ? "" : "_" + (index + 1)))
                             .SetPage(1)
