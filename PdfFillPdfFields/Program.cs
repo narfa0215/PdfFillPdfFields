@@ -65,7 +65,7 @@ namespace PdfFillPdfFields
                         float height = rect.GetHeight();
 
                         var textField = new TextFormFieldBuilder(pdfDoc, "00" + (index == 0 ? "" : "_" + (index + 1)))
-                            .SetPage(1)
+                            .SetPage(i)
                             .SetWidgetRectangle(new Rectangle(x, y, width, height))
                             .CreateText();
 
