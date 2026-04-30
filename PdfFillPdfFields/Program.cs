@@ -71,6 +71,8 @@ namespace PdfFillPdfFields
 
                         textField.SetMultiline(true);
 
+                        textField.SetFontSize(0);
+
                         form.AddField(textField);
                     }
                 }
