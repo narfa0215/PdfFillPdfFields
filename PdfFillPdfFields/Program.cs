@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using iText.Forms;
 using iText.Forms.Fields;
@@ -19,11 +21,19 @@ namespace PdfFillPdfFields
         public static void Main(string[] args)
         {
             using (var resourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("PdfFillPdfFields.Template.Table.pdf"))
+            using (var originWriter = new StreamWriter("origin_output.txt"))
             using (var pdfDoc = new PdfDocument(new PdfReader(resourceStream), new PdfWriter("output.pdf")))
             {
                 var form = PdfAcroForm.GetAcroForm(pdfDoc, true);
 
                 var page = pdfDoc.GetPage(1);
+                
+                var contentStream = page.GetContentStream(0);
+
+                var bytes = contentStream.GetBytes();
+                var content = Encoding.GetEncoding("ISO-8859-1").GetString(bytes); // 兼容 PDF 内容编码
+                
+                originWriter.Write(content);
                 
                 var listener = new RectListener();
                 var processor = new PdfCanvasProcessor(listener);
