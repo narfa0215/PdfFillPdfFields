@@ -46,23 +46,19 @@ namespace PdfFillPdfFields
                 foreach (var r in cleaned)
                 {
                     Console.WriteLine($"{r.GetX()} {r.GetY()} {r.GetWidth()} {r.GetHeight()}");
-                }
 
-                var firstCleaned = cleaned[0];
+                    float x = r.GetX();
+                    float y = r.GetY();
+                    float width = r.GetWidth();
+                    float height = r.GetHeight();
 
-                float x = firstCleaned.GetX();
-                float y = firstCleaned.GetY();
-                float width = firstCleaned.GetWidth();
-                float height = firstCleaned.GetHeight();
-
-                var textField = new TextFormFieldBuilder(pdfDoc, "CellText")
-                    .SetPage(1)
-                    .SetWidgetRectangle(new Rectangle(x, y, width, height))
-                    .CreateText();
+                    var textField = new TextFormFieldBuilder(pdfDoc, "CellText")
+                        .SetPage(1)
+                        .SetWidgetRectangle(new Rectangle(x, y, width, height))
+                        .CreateText();
                 
-                form.AddField(textField);
-
-                pdfDoc.Close();
+                    form.AddField(textField);
+                }
             }
         }
         
