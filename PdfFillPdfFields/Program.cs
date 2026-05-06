@@ -4,25 +4,113 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Text.RegularExpressions;
 using iText.Forms;
 using iText.Forms.Fields;
-using iText.Forms.Xfdf;
 using iText.Kernel.Geom;
 using iText.Kernel.Pdf;
 using iText.Kernel.Pdf.Canvas.Parser;
-using iText.Kernel.Pdf.Canvas.Parser.Listener;
-using iText.Kernel.Pdf.Canvas.Parser.Data;
+using Path = System.IO.Path;
 
 namespace PdfFillPdfFields
 {
     internal class Program
     {
+        private const string DocxResourceName = "PdfFillPdfFields.Template.Table.docx";
+        private const string PdfResourceName = "PdfFillPdfFields.Template.Table.pdf";
+
         public static void Main(string[] args)
         {
-            using (var resourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("PdfFillPdfFields.Template.Table.pdf"))
+            if (IsOfficeInstalled())
+            {
+                Console.WriteLine("检测到Office，正在处理...");
+                var inputDocxPath = ExtractResource(DocxResourceName, "input.docx");
+                var inputPdfPath = ConvertDocxToPdf(inputDocxPath, "input.pdf");
+                var outputPdfPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "output.pdf");
+                FillPdf(inputPdfPath, outputPdfPath);
+                Console.WriteLine($"完成！输出文件: {outputPdfPath}");
+            }
+            else
+            {
+                Console.WriteLine("未检测到Office，使用模板PDF...");
+                var inputPdfPath = ExtractResource(PdfResourceName, "demo_input.pdf");
+                var outputPdfPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "demo_output.pdf");
+                FillPdf(inputPdfPath, outputPdfPath);
+                Console.WriteLine($"完成！输出文件: {outputPdfPath}");
+            }
+        }
+
+        private static string ExtractResource(string resourceName, string outputFileName)
+        {
+            var outputPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, outputFileName);
+            
+            using (var resourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName))
+            using (var fileStream = new FileStream(outputPath, FileMode.Create, FileAccess.Write))
+            {
+                resourceStream?.CopyTo(fileStream);
+            }
+            
+            Console.WriteLine($"已导出: {outputPath}");
+            return outputPath;
+        }
+
+        private static bool IsOfficeInstalled()
+        {
+            try
+            {
+                var wordType = Type.GetTypeFromProgID("Word.Application");
+                if (wordType != null)
+                {
+                    dynamic word = Activator.CreateInstance(wordType);
+                    word.Quit();
+                    return true;
+                }
+            }
+            catch
+            {
+                // ignored
+            }
+
+            return false;
+        }
+
+        private static string ConvertDocxToPdf(string docxPath, string outputPdfName)
+        {
+            var pdfPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, outputPdfName);
+            
+            try
+            {
+                var wordType = Type.GetTypeFromProgID("Word.Application");
+                if (wordType == null)
+                    throw new Exception("无法创建Word应用程序");
+
+                dynamic word = Activator.CreateInstance(wordType);
+                word.Visible = false;
+                word.DisplayAlerts = false;
+
+                dynamic doc = word.Documents.Open(docxPath);
+                doc.SaveAs2(pdfPath, 17);
+                doc.Close(false);
+                word.Quit();
+
+                Console.WriteLine($"DOCX转换PDF成功: {pdfPath}");
+                return pdfPath;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"转换失败: {ex.Message}");
+                throw;
+            }
+            finally
+            {
+                if (File.Exists(docxPath))
+                    File.Delete(docxPath);
+            }
+        }
+
+        private static void FillPdf(string inputPdfPath, string outputPdfPath)
+        {
             using (var originWriter = new StreamWriter("origin_output.txt"))
-            using (var pdfDoc = new PdfDocument(new PdfReader(resourceStream), new PdfWriter("output.pdf")))
+            using (var pdfDoc = new PdfDocument(new PdfReader(inputPdfPath), new PdfWriter(outputPdfPath)))
             {
                 var form = PdfAcroForm.GetAcroForm(pdfDoc, true);
 
@@ -47,9 +135,7 @@ namespace PdfFillPdfFields
                     var cleaned = CleanRects(listener.Rectangles);
                     foreach (var rect in cleaned)
                     {
-                        bool isEmpty = PdfCellChecker.IsEmptyCell(page, rect);
-
-                        if (!isEmpty)
+                        if (!PdfCellChecker.IsEmptyCell(page, rect))
                         {
                             Console.WriteLine($"({index + 1:D6}:{i:D4}/{numberOfPages:D4})跳过非空单元格：{rect.GetX()} {rect.GetY()} {rect.GetWidth()} {rect.GetHeight()}");
                             continue;
@@ -59,14 +145,9 @@ namespace PdfFillPdfFields
                         
                         Console.WriteLine($"({index + 1:D6}:{i:D4}/{numberOfPages:D4})处理空白单元格：{rect.GetX()} {rect.GetY()} {rect.GetWidth()} {rect.GetHeight()}");
 
-                        float x = rect.GetX();
-                        float y = rect.GetY();
-                        float width = rect.GetWidth();
-                        float height = rect.GetHeight();
-
                         var textField = new TextFormFieldBuilder(pdfDoc, "00" + (index == 0 ? "" : "_" + (index + 1)))
                             .SetPage(i)
-                            .SetWidgetRectangle(new Rectangle(x, y, width, height))
+                            .SetWidgetRectangle(rect)
                             .CreateText();
 
                         textField.SetMultiline(true);
