@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -20,6 +21,8 @@ namespace PdfFillPdfFields
 
         public static void Main(string[] args)
         {
+            var stopwatch = Stopwatch.StartNew();
+            
             if (IsOfficeInstalled())
             {
                 Console.WriteLine("检测到Office，正在处理...");
@@ -37,6 +40,9 @@ namespace PdfFillPdfFields
                 FillPdf(inputPdfPath, outputPdfPath);
                 Console.WriteLine($"完成！输出文件: {outputPdfPath}");
             }
+            
+            stopwatch.Stop();
+            Console.WriteLine($"总耗时: {stopwatch.ElapsedMilliseconds}ms");
         }
 
         private static string ExtractResource(string resourceName, string outputFileName)
