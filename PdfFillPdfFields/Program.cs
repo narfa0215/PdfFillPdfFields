@@ -106,11 +106,6 @@ namespace PdfFillPdfFields
                 Console.WriteLine($"转换失败: {ex.Message}");
                 throw;
             }
-            finally
-            {
-                if (File.Exists(docxPath))
-                    File.Delete(docxPath);
-            }
         }
 
         private static void FillPdf(string inputPdfPath, string outputPdfPath)
